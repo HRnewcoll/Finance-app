@@ -1,5 +1,41 @@
 # Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.venv/
+venv/
+.env
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# Go
+vendor/
+*.test
+coverage.out
+bin/
+
+# Build artifacts
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated protobuf stubs (auto-generated via make proto)
+services/*/api/*.pb.go
+
+# Scaffolded services (added to repo individually by devs)
+# services/
 *.pyc
 *.pyo
 .pytest_cache/
