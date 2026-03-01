@@ -36,3 +36,11 @@ services/*/api/*.pb.go
 
 # Scaffolded services (added to repo individually by devs)
 # services/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+
+# Node / React
+frontend/node_modules/
+frontend/build/
