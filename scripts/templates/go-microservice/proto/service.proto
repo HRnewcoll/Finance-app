@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package {{SERVICE_NAME_SNAKE}};
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "{{MODULE_PATH}}/api;api";
+
+// {{SERVICE_NAME_PASCAL}}Service defines the RPC interface for the {{SERVICE_NAME}} service.
+service {{SERVICE_NAME_PASCAL}}Service {
+  // GetItem retrieves a single item by ID.
+  rpc GetItem(GetItemRequest) returns (GetItemResponse);
+
+  // ListItems returns a paginated list of items.
+  rpc ListItems(ListItemsRequest) returns (ListItemsResponse);
+
+  // CreateItem creates a new item.
+  rpc CreateItem(CreateItemRequest) returns (CreateItemResponse);
+
+  // UpdateItem updates an existing item.
+  rpc UpdateItem(UpdateItemRequest) returns (UpdateItemResponse);
+
+  // DeleteItem deletes an item by ID.
+  rpc DeleteItem(DeleteItemRequest) returns (DeleteItemResponse);
+}
+
+// ── Messages ────────────────────────────────────────────────────────────────
+
+message Item {
+  string                    id         = 1;
+  string                    name       = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+message GetItemRequest {
+  string id = 1;
+}
+
+message GetItemResponse {
+  Item item = 1;
+}
+
+message ListItemsRequest {
+  int32  page      = 1;
+  int32  page_size = 2;
+  string filter    = 3;
+}
+
+message ListItemsResponse {
+  repeated Item items       = 1;
+  int32         total_count = 2;
+}
+
+message CreateItemRequest {
+  string name = 1;
+}
+
+message CreateItemResponse {
+  Item item = 1;
+}
+
+message UpdateItemRequest {
+  string id   = 1;
+  string name = 2;
+}
+
+message UpdateItemResponse {
+  Item item = 1;
+}
+
+message DeleteItemRequest {
+  string id = 1;
+}
+
+message DeleteItemResponse {
+  bool success = 1;
+}
