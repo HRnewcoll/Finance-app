@@ -251,3 +251,78 @@ class TestMarketData:
         assert len(tickers) >= 4
         symbols = [t["ticker"] for t in tickers]
         assert "^GSPC" in symbols
+
+
+# ---------------------------------------------------------------------------
+# Budget planner tests
+# ---------------------------------------------------------------------------
+
+class TestBudgetPlanner:
+    def test_returns_expected_keys(self):
+        from budget import analyze_budget
+        result = analyze_budget(
+            budget_limits={"Housing": 1500, "Groceries": 400},
+            actual_spending={"Housing": 1450, "Groceries": 523},
+        )
+        assert "categories" in result
+        assert "total_budget" in result
+        assert "total_actual" in result
+        assert "total_remaining" in result
+        assert "over_budget_categories" in result
+        assert "savings_rate_pct" in result
+
+    def test_under_budget_status_ok(self):
+        from budget import analyze_budget
+        result = analyze_budget({"Food": 500}, {"Food": 300})
+        assert result["categories"]["Food"]["status"] == "ok"
+        assert result["categories"]["Food"]["remaining"] == pytest.approx(200.0)
+
+    def test_warning_at_76_to_100_pct(self):
+        from budget import analyze_budget
+        result = analyze_budget({"Food": 100}, {"Food": 80})
+        assert result["categories"]["Food"]["status"] == "warning"
+
+    def test_over_budget_status(self):
+        from budget import analyze_budget
+        result = analyze_budget({"Dining": 200}, {"Dining": 350})
+        assert result["categories"]["Dining"]["status"] == "over"
+        assert "Dining" in result["over_budget_categories"]
+
+    def test_category_in_actual_not_in_budget(self):
+        from budget import analyze_budget
+        # Spending on a category with no budget → status "over"
+        result = analyze_budget({"Housing": 1500}, {"Housing": 1200, "Shopping": 80})
+        assert "Shopping" in result["categories"]
+        assert result["categories"]["Shopping"]["status"] == "over"
+
+    def test_total_amounts(self):
+        from budget import analyze_budget
+        result = analyze_budget(
+            {"A": 100, "B": 200},
+            {"A": 80, "B": 150},
+        )
+        assert result["total_budget"] == pytest.approx(300.0)
+        assert result["total_actual"] == pytest.approx(230.0)
+        assert result["total_remaining"] == pytest.approx(70.0)
+
+    def test_savings_rate_calculated(self):
+        from budget import analyze_budget
+        result = analyze_budget({"A": 1000}, {"A": 600})
+        assert result["savings_rate_pct"] == pytest.approx(40.0)
+
+    def test_savings_rate_clamped_to_zero_when_over(self):
+        from budget import analyze_budget
+        result = analyze_budget({"A": 100}, {"A": 200})
+        assert result["savings_rate_pct"] == 0.0
+
+    def test_empty_budgets(self):
+        from budget import analyze_budget
+        result = analyze_budget({}, {})
+        assert result["total_budget"] == 0.0
+        assert result["total_actual"] == 0.0
+        assert result["over_budget_categories"] == []
+
+    def test_pct_used_precision(self):
+        from budget import analyze_budget
+        result = analyze_budget({"X": 300}, {"X": 150})
+        assert result["categories"]["X"]["pct_used"] == pytest.approx(50.0)

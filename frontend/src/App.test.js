@@ -38,6 +38,19 @@ describe('App navigation', () => {
     expect(screen.getByText(/Expense Categorizer/i)).toBeInTheDocument();
     expect(screen.getByText(/Spending Forecast/i)).toBeInTheDocument();
   });
+  it('switches to Budget Planner tab', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText(/Budget Planner/i));
+    expect(screen.getByText(/Set monthly budget limits/i)).toBeInTheDocument();
+    expect(screen.getByText(/Analyse Budget/i)).toBeInTheDocument();
+  });
+
+  it('switches to Net Worth tab', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText(/Net Worth/i));
+    expect(screen.getByText(/Net Worth Tracker/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Take Snapshot/i })).toBeInTheDocument();
+  });
 });
 
 describe('RetirementSimulator', () => {
@@ -106,6 +119,85 @@ describe('HabitTracker', () => {
     render(<App />);
     fireEvent.click(screen.getByText(/Habit & Mood Tracker/i));
     expect(screen.getByText(/Auto-Summarise/i)).toBeInTheDocument();
+  });
+});
+
+describe('BudgetPlanner', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('renders all category inputs', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText(/Budget Planner/i));
+    expect(screen.getByText('Housing')).toBeInTheDocument();
+    expect(screen.getByText('Groceries')).toBeInTheDocument();
+    expect(screen.getByText('Dining')).toBeInTheDocument();
+  });
+
+  it('has Set Budgets and Enter Actual Spending tabs', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText(/Budget Planner/i));
+    expect(screen.getByText(/Set Budgets/i)).toBeInTheDocument();
+    expect(screen.getByText(/Enter Actual Spending/i)).toBeInTheDocument();
+  });
+
+  it('loads sample data', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText(/Budget Planner/i));
+    // There are multiple "Load sample data" buttons across different tabs,
+    // find the one in Budget Planner context
+    const sampleBtns = screen.getAllByText(/Load sample data/i);
+    fireEvent.click(sampleBtns[0]);
+    // After loading, some Housing input should be populated
+    const inputs = screen.getAllByRole('spinbutton');
+    const nonEmpty = inputs.filter(i => i.value !== '' && i.value !== '0');
+    expect(nonEmpty.length).toBeGreaterThan(0);
+  });
+});
+
+describe('NetWorthTracker', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('renders assets and liabilities sections', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText(/Net Worth/i));
+    expect(screen.getByText(/💚 Assets/i)).toBeInTheDocument();
+    expect(screen.getByText(/🔴 Liabilities/i)).toBeInTheDocument();
+  });
+
+  it('shows Add Asset and Add Debt buttons', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText(/Net Worth/i));
+    expect(screen.getByRole('button', { name: /\+ Add Asset/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /\+ Add Debt/i })).toBeInTheDocument();
+  });
+
+  it('can add an asset', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText(/Net Worth/i));
+    fireEvent.click(screen.getByRole('button', { name: /\+ Add Asset/i }));
+    const nameInputs = screen.getAllByPlaceholderText('Name');
+    expect(nameInputs.length).toBeGreaterThan(0);
+    fireEvent.change(nameInputs[0], { target: { value: 'Chase Savings' } });
+    expect(screen.getByDisplayValue('Chase Savings')).toBeInTheDocument();
+  });
+
+  it('loads demo data', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText(/Net Worth/i));
+    fireEvent.click(screen.getByText(/Load demo data/i));
+    // Asset and liability names render as input values
+    expect(screen.getByDisplayValue('Chase Checking')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Home Mortgage')).toBeInTheDocument();
+  });
+
+  it('shows net worth history section', () => {
+    render(<App />);
+    fireEvent.click(screen.getByText(/Net Worth/i));
+    expect(screen.getByText(/Net Worth History/i)).toBeInTheDocument();
   });
 });
 

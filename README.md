@@ -22,6 +22,23 @@ AI-powered personal finance & productivity tools built with React + Chart.js (fr
 - Doughnut + bar charts via Chart.js
 - 3-month spending forecast using linear regression with confidence bands
 
+### 📋 Budget Planner
+- Set monthly budget limits for 11 spending categories
+- Enter actual spending and compare against budgets
+- Colour-coded progress bars per category: green (≤75%), amber (76–100%), red (over budget)
+- Summary stats: total budget, total spent, remaining, savings rate, over-budget categories
+- Budget vs Actual grouped bar chart
+- All data persisted to `localStorage`
+
+### 🏦 Net Worth Tracker
+- Add and manage assets (Checking, Savings, Investments, Retirement, Real Estate, Vehicle…)
+- Add and manage liabilities (Credit Card, Mortgage, Student Loan, Auto Loan…)
+- Live net worth calculation = total assets − total liabilities
+- Debt-to-asset ratio indicator
+- **Snapshot** your net worth at any point in time and view the full history in a sortable table
+- Line chart showing net worth trend over time (needs ≥ 2 snapshots)
+- All data persisted to `localStorage`
+
 ## Screenshots
 
 **Retirement Simulator (Monte Carlo)**
@@ -32,6 +49,12 @@ AI-powered personal finance & productivity tools built with React + Chart.js (fr
 
 **Expense Dashboard**
 ![Expense Dashboard](https://github.com/user-attachments/assets/8740bdbf-2507-4c5f-b8f7-1992f22a9971)
+
+**Budget Planner**
+![Budget Planner](https://github.com/user-attachments/assets/18ada4a5-940e-4ee6-85af-9cce28be96ee)
+
+**Net Worth Tracker**
+![Net Worth Tracker](https://github.com/user-attachments/assets/190b1fae-ba11-44fc-b319-987d094bbcbc)
 
 ## Getting Started
 
@@ -51,10 +74,10 @@ npm start              # runs on http://localhost:3000
 
 ### Tests
 ```bash
-# Backend (32 tests)
+# Backend (42 tests)
 cd backend && python -m pytest test_backend.py -v
 
-# Frontend (16 tests)
+# Frontend (26 tests)
 cd frontend && npm test
 ```
 
@@ -62,21 +85,24 @@ cd frontend && npm test
 ```
 Finance-app/
 ├── backend/
-│   ├── app.py              # Flask REST API
+│   ├── app.py              # Flask REST API (8 endpoints)
 │   ├── monte_carlo.py      # Monte Carlo simulation engine
 │   ├── market_data.py      # yfinance market data scraping + fallback
 │   ├── expense.py          # Keyword categoriser + linear-regression forecaster
+│   ├── budget.py           # Budget vs actual analysis + savings rate
 │   ├── summarizer.py       # Extractive TF-IDF summariser (+ optional OpenAI)
-│   ├── test_backend.py     # 32 pytest tests
+│   ├── test_backend.py     # 42 pytest tests
 │   └── requirements.txt
 └── frontend/
     ├── src/
     │   ├── App.js
     │   ├── App.css
-    │   ├── App.test.js     # 16 React Testing Library tests
+    │   ├── App.test.js     # 26 React Testing Library tests
     │   └── components/
     │       ├── RetirementSimulator.jsx
     │       ├── HabitTracker.jsx
-    │       └── ExpenseDashboard.jsx
+    │       ├── ExpenseDashboard.jsx
+    │       ├── BudgetPlanner.jsx
+    │       └── NetWorthTracker.jsx
     └── package.json
 ```

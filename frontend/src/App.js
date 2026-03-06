@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import RetirementSimulator from './components/RetirementSimulator';
 import HabitTracker from './components/HabitTracker';
 import ExpenseDashboard from './components/ExpenseDashboard';
+import BudgetPlanner from './components/BudgetPlanner';
+import NetWorthTracker from './components/NetWorthTracker';
 import './App.css';
 
 const TABS = [
   { id: 'retirement', label: '📈 Retirement Simulator' },
   { id: 'habits',     label: '✅ Habit & Mood Tracker' },
   { id: 'expenses',   label: '💰 Expense Dashboard' },
+  { id: 'budget',     label: '📋 Budget Planner' },
+  { id: 'networth',   label: '🏦 Net Worth' },
 ];
 
 export default function App() {
@@ -34,6 +38,8 @@ export default function App() {
         {activeTab === 'retirement' && <RetirementSimulator />}
         {activeTab === 'habits'     && <HabitTracker />}
         {activeTab === 'expenses'   && <ExpenseDashboard />}
+        {activeTab === 'budget'     && <BudgetPlanner />}
+        {activeTab === 'networth'   && <NetWorthTracker />}
       </main>
     </div>
   );

@@ -8,6 +8,7 @@ Endpoints:
   POST /api/expenses/forecast    – Forecast future spending
   POST /api/expenses/aggregate   – Aggregate spending by category
   POST /api/summarize            – Summarise a journal entry
+  POST /api/budget/analyze       – Compare actual spending against budget limits
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from __future__ import annotations
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+from budget import analyze_budget
 from expense import aggregate_by_category, categorize_expenses, forecast_expenses
 from market_data import get_return_stats, list_available_tickers
 from monte_carlo import run_simulation
@@ -125,6 +127,29 @@ def summarize_journal():
         return jsonify({"error": "'text' must be a string"}), 400
     result = summarize(text=text, max_sentences=max_sentences, use_openai=use_openai)
     return jsonify(result)
+
+
+# ---------------------------------------------------------------------------
+# Budget analysis
+# ---------------------------------------------------------------------------
+
+@app.post("/api/budget/analyze")
+def budget_analyze():
+    data = request.get_json(force=True)
+    budgets = data.get("budgets", {})
+    actual = data.get("actual", {})
+    if not isinstance(budgets, dict):
+        return jsonify({"error": "'budgets' must be a dict"}), 400
+    if not isinstance(actual, dict):
+        return jsonify({"error": "'actual' must be a dict"}), 400
+    try:
+        result = analyze_budget(
+            budget_limits={k: float(v) for k, v in budgets.items()},
+            actual_spending={k: float(v) for k, v in actual.items()},
+        )
+        return jsonify(result)
+    except (ValueError, TypeError) as exc:
+        return jsonify({"error": str(exc)}), 400
 
 
 # ---------------------------------------------------------------------------
