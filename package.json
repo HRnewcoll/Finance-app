@@ -1,0 +1,37 @@
+{
+  "name": "finance-app-tooling",
+  "version": "1.0.0",
+  "description": "Tooling configuration for Finance-app monorepo (commitlint, changelog, etc.)",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "commit": "cz",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
+    "changelog:patch": "conventional-changelog -p angular -i CHANGELOG.md -s",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "lint:commits": "commitlint --from HEAD~1 --to HEAD --verbose"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "@commitlint/prompt-cli": "^19.3.1",
+    "commitizen": "^4.3.0",
+    "conventional-changelog-cli": "^4.1.0",
+    "cz-conventional-changelog": "^3.3.0",
+    "husky": "^9.0.11",
+    "standard-version": "^9.5.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint --edit $1",
+      "pre-commit": "pre-commit run --hook-stage pre-commit"
+    }
+  }
+}

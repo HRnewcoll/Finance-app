@@ -1,0 +1,181 @@
+# Conventional Commits Enforcer
+# Validates that all commit messages and the PR title follow the
+# Conventional Commits specification (https://www.conventionalcommits.org/)
+
+name: Conventional Commits
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches: ["**"]
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  # ── Validate PR Title ────────────────────────────────────────────────────────
+  validate-pr-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install commitlint
+        run: |
+          npm install --save-dev \
+            @commitlint/cli@19.3.0 \
+            @commitlint/config-conventional@19.2.2
+
+      - name: Validate PR title follows Conventional Commits
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "$PR_TITLE" | npx commitlint --verbose
+          echo "✅ PR title '$PR_TITLE' is a valid conventional commit message."
+
+      - name: Comment on PR if validation fails
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = context.payload.pull_request.title;
+            const body = `## ❌ PR Title Validation Failed
+
+            The PR title **"${title}"** does not follow the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+
+            ### Required Format
+            \`\`\`
+            <type>(<optional scope>): <description>
+            \`\`\`
+
+            ### Valid Types
+            | Type | Description |
+            |------|-------------|
+            | \`feat\` | A new feature |
+            | \`fix\` | A bug fix |
+            | \`docs\` | Documentation only changes |
+            | \`style\` | Changes that do not affect the meaning of the code |
+            | \`refactor\` | A code change that neither fixes a bug nor adds a feature |
+            | \`perf\` | A code change that improves performance |
+            | \`test\` | Adding missing tests or correcting existing tests |
+            | \`build\` | Changes that affect the build system or external dependencies |
+            | \`ci\` | Changes to CI configuration files and scripts |
+            | \`chore\` | Other changes that don't modify src or test files |
+            | \`revert\` | Reverts a previous commit |
+
+            ### Examples
+            - ✅ \`feat(auth): add JWT token refresh endpoint\`
+            - ✅ \`fix: resolve null pointer in transaction processor\`
+            - ✅ \`docs: update API documentation for payment service\`
+            - ✅ \`chore(deps): bump lodash from 4.17.20 to 4.17.21\`
+            - ❌ \`Updated stuff\`
+            - ❌ \`WIP\`
+            - ❌ \`Fixes things\`
+            `;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body,
+            });
+
+  # ── Validate All Commit Messages in PR ──────────────────────────────────────
+  validate-commits:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install commitlint
+        run: |
+          npm install --save-dev \
+            @commitlint/cli@19.3.0 \
+            @commitlint/config-conventional@19.2.2
+
+      - name: Validate commits in this PR
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          echo "Validating commits from $BASE_SHA to $HEAD_SHA"
+          npx commitlint \
+            --from "$BASE_SHA" \
+            --to "$HEAD_SHA" \
+            --verbose
+
+          COMMIT_COUNT=$(git rev-list --count "$BASE_SHA..$HEAD_SHA")
+          echo "✅ All $COMMIT_COUNT commit(s) follow the Conventional Commits specification."
+
+      - name: Comment with commit summary on PR
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const base = context.payload.pull_request.base.sha;
+            const head = context.payload.pull_request.head.sha;
+
+            let commits;
+            try {
+              const raw = execSync(
+                `git log --pretty=format:"%H|%s" ${base}..${head}`,
+                { encoding: 'utf8' }
+              ).trim();
+              commits = raw.split('\n').filter(Boolean).map(line => {
+                const [sha, ...msg] = line.split('|');
+                return { sha: sha.slice(0, 7), message: msg.join('|') };
+              });
+            } catch (e) {
+              console.log('Could not list commits:', e.message);
+              return;
+            }
+
+            if (commits.length === 0) return;
+
+            const list = commits.map(c => `- \`${c.sha}\` ${c.message}`).join('\n');
+            const body = `## ✅ Conventional Commits Check Passed
+
+            All **${commits.length}** commit(s) in this PR follow the Conventional Commits specification:
+
+            ${list}
+            `;
+
+            // Only comment once per PR (avoid spam on re-runs)
+            const existing = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+            const botComment = existing.data.find(c =>
+              c.user.type === 'Bot' && c.body.includes('Conventional Commits Check Passed')
+            );
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body,
+              });
+            }

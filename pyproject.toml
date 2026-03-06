@@ -1,0 +1,33 @@
+[tool.bandit]
+# Bandit security scanner configuration
+# Docs: https://bandit.readthedocs.io/en/latest/
+
+# Directories to exclude from scanning
+exclude_dirs = [
+    ".git",
+    "node_modules",
+    "vendor",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "dist",
+    "build",
+]
+
+# Tests to skip (add only with documented justification)
+# skips = []
+
+# Severity threshold: LOW, MEDIUM, HIGH
+# Tests at or above this level are reported
+severity = "MEDIUM"
+
+# Confidence threshold: LOW, MEDIUM, HIGH
+confidence = "MEDIUM"
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.black]
+line-length = 88
+target-version = ["py311", "py312"]
